@@ -135,3 +135,62 @@
     @apply font-sans;
   }
 }
+
+/* Diary is a fixed full-screen stage: no page scroll / pull-to-refresh. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #000;
+}
+
+/* ---- Diary ambience & extras ---- */
+@keyframes amb-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.2); }
+}
+@keyframes amb-rise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  12% { opacity: 0.75; }
+  100% { transform: translate3d(var(--sway, 0px), calc(var(--rise, 600px) * -1), 0) scale(1.1); opacity: 0; }
+}
+@keyframes amb-breathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+@keyframes tap-pop {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1); opacity: 0; }
+}
+@keyframes env-wiggle {
+  0%, 84%, 100% { transform: rotate(0); }
+  88% { transform: rotate(-14deg); }
+  92% { transform: rotate(12deg); }
+  96% { transform: rotate(-6deg); }
+}
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+@keyframes note-in {
+  from { opacity: 0; transform: translateY(14px) rotate(-4deg) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) rotate(-1.5deg) scale(1); }
+}
+@keyframes note-caret {
+  50% { opacity: 0; }
+}
+
+.amb-glow { animation: amb-breathe 6s ease-in-out infinite; }
+.amb-star { animation: amb-twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite; }
+.amb-heart { animation: amb-rise var(--dur, 12s) linear var(--delay, 0s) infinite; }
+.tap-pop { animation: tap-pop 0.9s ease-out forwards; }
+.env-wiggle { animation: env-wiggle 4s ease-in-out infinite; transform-origin: 50% 90%; }
+.hint-pulse { animation: hint-pulse 2s ease-in-out infinite; }
+.note-in { animation: note-in 0.45s ease-out forwards; }
+.note-caret { animation: note-caret 0.9s steps(1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .amb-star, .amb-heart, .amb-glow, .env-wiggle, .hint-pulse { animation: none; }
+  .amb-heart { display: none; }
+}
