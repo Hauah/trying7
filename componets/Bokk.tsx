@@ -370,9 +370,9 @@ export default function Book() {
       >
       {/* Front Cover */}
       <div
-        className="book-page bg-blue-700 text-white"
+        className="relative overflow-hidden book-page bg-blue-700 text-white"
         data-density="hard"
-        style={{ width: 200, height: 700 }}
+        style={{ width: 400, height: 500 }}
       >
         <Image
           // src="/frontr.png"
@@ -381,7 +381,7 @@ export default function Book() {
           fill
           priority
           draggable={false}
-          className="object-contain scale-130 translate-x-3 pointer-events-none select-none"
+          className="object-fill pointer-events-none select-none"
         ></Image>
 
         <div className="flex h-full items-center justify-center text-5xl font-bold"></div>
@@ -451,7 +451,7 @@ export default function Book() {
         ></Image>
 
         <Image
-          src="/ref/girl.jpg"
+          src="/ref/girl7.jpg"
           alt="Front Cover"
           fill
           priority
@@ -931,7 +931,7 @@ export default function Book() {
       <div
         className="relative overflow-hidden book-page bg-blue-700 text-white"
         data-density="hard"
-        style={{ width: 600, height: 500 }}
+        style={{ width: 400, height: 500 }}
       >
         {/* <div className="flex h-full items-center justify-center text-5xl font-bold">
           Back Cover
@@ -943,7 +943,7 @@ export default function Book() {
           fill
           priority
           draggable={false}
-          className="object-contain scale-130 translate-x-3 pointer-events-none select-none"
+          className="object-fill pointer-events-none select-none"
         ></Image>
       </div>
       </div> {/* Close PageFlip book-stage BEFORE audio and lyrics */}
