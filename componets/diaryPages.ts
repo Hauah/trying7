@@ -7,15 +7,19 @@
 //  3. Each page can hold 1, 2 or 3 photos. `caption` and `title` are optional.
 //
 //  Photos are referenced like:  "/photos/trip1.jpg"
+//  Tip: avoid special characters like # or spaces in photo file names.
 // ─────────────────────────────────────────────────────────────────────────
 import type { SpreadConfig } from "./PhotoPage";
 
 export const PHOTO_SPREADS: SpreadConfig[] = [
   {
-    // Demo spread using photos already in your project — swap these out!
+    // Uses the photos that weren't used anywhere else. Swap them any time!
     left: {
       title: "little moments",
-      photos: [{ src: "/ref/girl6.jpg", caption: "one of my favourite days" }],
+      photos: [
+        { src: "/ref/girl6.jpg", caption: "one of my favourite days" },
+        { src: "/photos/memory1.jpg", caption: "a memory I keep" },
+      ],
     },
     right: {
       photos: [{ src: "/ref/girl7.jpg", caption: "just me being me ♡" }],
