@@ -922,8 +922,8 @@ export default function Book() {
       {/* Extra photo pages (edit componets/diaryPages.ts) */}
       {PHOTO_SPREADS.map((spread, i) => (
         <Fragment key={i}>
-          <PhotoPage side="left" {...spread.left} />
-          <PhotoPage side="right" {...spread.right} />
+          <PhotoPage side="left" seed={i * 2} {...spread.left} />
+          <PhotoPage side="right" seed={i * 2 + 1} {...spread.right} />
         </Fragment>
       ))}
 
