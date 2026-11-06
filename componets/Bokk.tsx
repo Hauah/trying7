@@ -80,13 +80,15 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { PageFlip } from "page-flip";
 import Image from "next/image";
 import Draggable from "react-draggable";
 import DraggableItem from "./DragItem";
 import Ambient from "./Ambient";
 import SecretNote from "./SecretNote";
+import PhotoPage from "./PhotoPage";
+import { PHOTO_SPREADS } from "./diaryPages";
 
 // ---- Landscape "PC feel" stage -------------------------------------------
 // The whole diary lives on a fixed-size desktop stage (STAGE_W x STAGE_H).
@@ -99,7 +101,9 @@ const STAGE_H = 570;
 const MAX_SCALE = 1.6;
 
 // Little notes hidden behind the 💌 button. Edit these to your own words!
+// The first one pops up on its own when the diary opens.
 const SECRET_NOTES = [
+  "Welcome to my little secret world ♡ Turn the pages slowly, there's a piece of my heart on every one.",
   "Some feelings are too big for words, so I keep them here, between these pages.",
   "If you're reading this, you've found my favourite hiding place.",
   "Every page is a little piece of me I wasn't brave enough to say out loud.",
@@ -213,6 +217,18 @@ export default function Book() {
       return nextIndex;
     });
   };
+
+  // Pop the first secret note open by itself shortly after the diary loads.
+  const welcomed = useRef(false);
+  useEffect(() => {
+    if (!layout.ready) return;
+    const id = window.setTimeout(() => {
+      if (welcomed.current) return;
+      welcomed.current = true;
+      setNoteOpen(true);
+    }, 900);
+    return () => window.clearTimeout(id);
+  }, [layout.ready]);
 
   // Sparkle burst wherever the screen is tapped / clicked.
   const handleTap = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -955,6 +971,14 @@ export default function Book() {
           className="object-contain scale-58  rotate-0 z-50 -translate-x-17 translate-y-40 "
         />
       </div>
+
+      {/* Extra photo pages (edit componets/diaryPages.ts) */}
+      {PHOTO_SPREADS.map((spread, i) => (
+        <Fragment key={i}>
+          <PhotoPage side="left" {...spread.left} />
+          <PhotoPage side="right" {...spread.right} />
+        </Fragment>
+      ))}
 
       {/* Back Cover */}
       <div
