@@ -101,7 +101,25 @@ const MAX_SCALE = 1.6;
 
 // Pops up on its own when the diary opens. Edit it to your own words!
 const WELCOME_NOTE =
-  "Welcome to my little secret world ♡ Turn the pages slowly, there's a piece of my heart on every one.";
+  "Hey, you♡
+
+Welcome to your little corner of happiness.
+
+I don't know if I can make all your bad days better, but I hope I can make some of them a little brighter.
+
+I hope you smile a little more, worry a little less,
+and always remember how special you are.
+
+You deserve all the happiness in this world, all the soft moments,
+all the little things that make your heart happy.
+
+And hey...
+never forget to take care of that pretty smile of yours.
+It genuinely makes the world a little better. ♡
+Good Biee 🌷✨
+TakeCare..
+
+**Made with a little extra care, just for you.**🎀";
 
 type Layout = {
   scale: number;
