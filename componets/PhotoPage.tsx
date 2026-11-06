@@ -3,7 +3,22 @@
 import Image from "next/image";
 
 export type PagePhoto = { src: string; caption?: string };
-export type PageConfig = { photos: PagePhoto[]; title?: string };
+// A sticker from /public/elements. top/left are % of the page, w/h are px,
+// rot is degrees. h defaults to w. z lifts it above (30) or below (10) photos.
+export type PageSticker = {
+  src: string;
+  top: number;
+  left: number;
+  w: number;
+  h?: number;
+  rot?: number;
+  z?: number;
+};
+export type PageConfig = {
+  photos: PagePhoto[];
+  title?: string;
+  stickers?: PageSticker[];
+};
 export type SpreadConfig = { left: PageConfig; right: PageConfig };
 
 // Photo slots for a RIGHT page: [left %, top %, width %, rotation deg].
@@ -21,11 +36,10 @@ const LAYOUTS: Record<number, [number, number, number, number][]> = {
   ],
 };
 
-// Cute stickers that already exist in /public/elements. [file, top %, left %, size px, rotate]
-const STICKERS: [string, number, number, number, number][] = [
-  ["/elements/twoStar.png", 3, 76, 54, 8],
-  ["/elements/moon.png", 78, 70, 50, -8],
-  ["/elements/starem.png", 82, 14, 46, 10],
+// Used when a page doesn't list its own stickers.
+const DEFAULT_STICKERS: PageSticker[] = [
+  { src: "/elements/twoStar.png", top: 3, left: 70, w: 54, rot: 8, z: 10 },
+  { src: "/elements/moon.png", top: 78, left: 66, w: 50, rot: -8, z: 10 },
 ];
 
 const HAND_FONT = '"Segoe Script","Bradley Hand","Comic Sans MS",cursive';
@@ -35,6 +49,7 @@ export default function PhotoPage({
   side,
   photos,
   title,
+  stickers = DEFAULT_STICKERS,
 }: PageConfig & { side: "left" | "right" }) {
   const slots = LAYOUTS[Math.min(Math.max(photos.length, 1), 3)];
   const mirror = side === "left";
@@ -54,26 +69,27 @@ export default function PhotoPage({
       />
 
       {/* stickers */}
-      {STICKERS.map(([src, top, left, size, rot], i) => (
+      {stickers.map((st, i) => (
         <div
-          key={src}
-          className="pointer-events-none absolute z-10"
+          key={`${st.src}-${i}`}
+          className="pointer-events-none absolute"
           style={{
-            top: `${top}%`,
-            left: `${mirror ? 100 - left - 10 : left}%`,
-            width: size,
-            height: size,
-            transform: `rotate(${mirror ? -rot : rot}deg)`,
-            opacity: i === 0 || photos.length < 3 ? 1 : 0,
+            top: `${st.top}%`,
+            left: `${st.left}%`,
+            width: st.w,
+            height: st.h ?? st.w,
+            zIndex: st.z ?? 30,
+            transform: `rotate(${st.rot ?? 0}deg)`,
           }}
         >
           <Image
-            src={src}
+            src={st.src}
             alt=""
-            width={size}
-            height={size}
+            fill
+            sizes="160px"
+            loading="eager"
             draggable={false}
-            className="h-full w-full object-contain select-none"
+            className="object-contain select-none"
           />
         </div>
       ))}
