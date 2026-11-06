@@ -55,6 +55,12 @@
   transform-style: preserve-3d;
 }
 
+/* Covers: black behind the PNG's transparent edges / between the spiral rings.
+   Must be CSS (not inline) because page-flip rewrites each page's inline style. */
+.book-page.book-cover {
+  background: #000;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
