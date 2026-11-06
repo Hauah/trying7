@@ -85,6 +85,8 @@ import { PageFlip } from "page-flip";
 import Image from "next/image";
 import Draggable from "react-draggable";
 import DraggableItem from "./DragItem";
+import Ambient from "./Ambient";
+import SecretNote from "./SecretNote";
 
 // ---- Landscape "PC feel" stage -------------------------------------------
 // The whole diary lives on a fixed-size desktop stage (STAGE_W x STAGE_H).
@@ -96,7 +98,64 @@ const STAGE_W = 880;
 const STAGE_H = 570;
 const MAX_SCALE = 1.6;
 
-type Layout = { scale: number; rotated: boolean; ready: boolean };
+// Little notes hidden behind the 💌 button. Edit these to your own words!
+const SECRET_NOTES = [
+  "Some feelings are too big for words, so I keep them here, between these pages.",
+  "If you're reading this, you've found my favourite hiding place.",
+  "Every page is a little piece of me I wasn't brave enough to say out loud.",
+  "Plot twist: you were the best chapter all along. ♡",
+  "Psst… turn the page. There's more of me waiting there.",
+];
+
+const TAP_EMOJIS = ["✨", "💖", "⭐", "🤍"];
+
+type Layout = {
+  scale: number;
+  rotated: boolean;
+  ready: boolean;
+  ew: number; // usable width after rotation (px)
+  eh: number; // usable height after rotation (px)
+};
+
+type Spark = { id: number; x: number; y: number; e: string; dx: number; dy: number };
+
+// Soft "paper swish" made with the Web Audio API (no sound file needed).
+function playPaperSwish(ctxRef: { current: AudioContext | null }) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    if (Ctx) {
+      const ctx: AudioContext = ctxRef.current ?? (ctxRef.current = new Ctx());
+      if (ctx.state === "suspended") void ctx.resume();
+      const t = ctx.currentTime;
+      const dur = 0.38;
+      const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.Q.value = 0.8;
+      filter.frequency.setValueAtTime(900, t);
+      filter.frequency.exponentialRampToValueAtTime(4200, t + dur);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(t);
+    }
+  } catch {
+    // Audio is a nice-to-have; ignore any failure.
+  }
+  // Tiny haptic tick on phones that support it (Android).
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
+}
 
 export default function Book() {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -105,7 +164,16 @@ export default function Book() {
     scale: 1,
     rotated: false,
     ready: false,
+    ew: 0,
+    eh: 0,
   });
+  const [page, setPage] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
+  const [sparks, setSparks] = useState<Spark[]>([]);
+  const sparkId = useRef(0);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteIdx, setNoteIdx] = useState(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   // Mirror of `layout` for use inside the PageFlip pointer patch below.
   const layoutRef = useRef<Layout>(layout);
   layoutRef.current = layout;
@@ -146,6 +214,37 @@ export default function Book() {
     });
   };
 
+  // Sparkle burst wherever the screen is tapped / clicked.
+  const handleTap = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const { rotated, ew, eh } = layoutRef.current;
+    const dx = e.clientX - (r.left + r.width / 2);
+    const dy = e.clientY - (r.top + r.height / 2);
+    // Screen point -> position inside the (possibly rotated) world layer.
+    const x = rotated ? ew / 2 + dy : ew / 2 + dx;
+    const y = rotated ? eh / 2 - dx : eh / 2 + dy;
+    const id = ++sparkId.current;
+    const fresh: Spark[] = Array.from({ length: 5 }, (_, i) => {
+      const a = (i / 5) * Math.PI * 2 + Math.random();
+      const d = 34 + Math.random() * 30;
+      return {
+        id: id * 10 + i,
+        x,
+        y,
+        e: TAP_EMOJIS[(id + i) % TAP_EMOJIS.length],
+        dx: Math.cos(a) * d,
+        dy: Math.sin(a) * d,
+      };
+    });
+    setSparks((prev) => [...prev.slice(-15), ...fresh]);
+    window.setTimeout(
+      () => setSparks((prev) => prev.filter((s) => Math.floor(s.id / 10) !== id)),
+      950
+    );
+  };
+
   // Fit + rotate the stage to the screen.
   useEffect(() => {
     const el = viewportRef.current;
@@ -164,9 +263,13 @@ export default function Book() {
       const availH = rotated ? vw : vh;
       const scale = Math.min(availW / STAGE_W, availH / STAGE_H, MAX_SCALE);
       setLayout((prev) =>
-        prev.ready && prev.rotated === rotated && Math.abs(prev.scale - scale) < 0.001
+        prev.ready &&
+        prev.rotated === rotated &&
+        prev.ew === availW &&
+        prev.eh === availH &&
+        Math.abs(prev.scale - scale) < 0.001
           ? prev
-          : { scale, rotated, ready: true }
+          : { scale, rotated, ready: true, ew: availW, eh: availH }
       );
     };
 
@@ -215,6 +318,11 @@ export default function Book() {
     // const pages = bookRef.current.querySelectorAll(".book-page");
     pageFlip.loadFromHTML(bookRef.current.querySelectorAll(".book-page"));
     pageFlipRef.current = pageFlip;
+    setPageCount(pageFlip.getPageCount());
+    pageFlip.on("flip", (e: { data: unknown }) => setPage(Number(e.data) || 0));
+    pageFlip.on("changeState", (e: { data: unknown }) => {
+      if (e.data === "flipping") playPaperSwish(audioCtxRef);
+    });
 
     // PageFlip converts finger/mouse position with getBoundingClientRect(),
     // which is wrong once the book is CSS-scaled or rotated. Replace it with a
@@ -248,8 +356,27 @@ export default function Book() {
       ref={viewportRef}
       className="fixed inset-0 overflow-hidden bg-black select-none"
       style={{ touchAction: "none" }}
+      onPointerDown={handleTap}
     >
-      {/* Fixed-size desktop stage: scaled to fit, rotated on portrait phones */}
+      {/* "World": a layer the size of the usable screen, turned sideways on
+          portrait phones. Everything (backdrop, book, sparkles) lives in it. */}
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: layout.ew,
+          height: layout.eh,
+          marginLeft: -layout.ew / 2,
+          marginTop: -layout.eh / 2,
+          transform: `rotate(${layout.rotated ? 90 : 0}deg)`,
+          transformOrigin: "50% 50%",
+          visibility: layout.ready ? "visible" : "hidden",
+        }}
+      >
+      <Ambient h={layout.eh} />
+
+      {/* Fixed-size desktop stage, scaled to fit the world */}
       <div
         style={{
           position: "absolute",
@@ -259,9 +386,8 @@ export default function Book() {
           height: STAGE_H,
           marginLeft: -STAGE_W / 2,
           marginTop: -STAGE_H / 2,
-          transform: `rotate(${layout.rotated ? 90 : 0}deg) scale(${layout.scale})`,
+          transform: `scale(${layout.scale})`,
           transformOrigin: "50% 50%",
-          visibility: layout.ready ? "visible" : "hidden",
         }}
       >
       <div
@@ -850,6 +976,16 @@ export default function Book() {
         ></Image>
       </div>
       </div> {/* Close PageFlip book-stage BEFORE audio and lyrics */}
+
+      {/* Cover hint: disappears after the first page turn */}
+      {page === 0 && (
+        <div
+          className="hint-pulse pointer-events-none absolute bottom-5 right-0 z-30 text-center text-sm tracking-widest text-white"
+          style={{ width: BOOK_W / 2, textShadow: "0 0 8px #ff4fa3, 0 1px 3px rgba(0,0,0,.9)" }}
+        >
+          ✨ tap ›  or drag the corner ✨
+        </div>
+      )}
       </div>
 
       {/* Tap arrows: easy page turning on touch screens */}
@@ -869,6 +1005,24 @@ export default function Book() {
       >
         ›
       </button>
+
+      {/* Secret notes: tap the envelope for a little surprise */}
+      <button
+        type="button"
+        aria-label="Open a secret note"
+        onClick={() => setNoteOpen(true)}
+        className="env-wiggle absolute right-1 top-1 z-[50] text-3xl leading-none"
+      >
+        💌
+        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-pink-500" />
+      </button>
+
+      {/* Page counter */}
+      {pageCount > 0 && (
+        <p className="pointer-events-none absolute bottom-3 left-4 text-xs tracking-widest text-white/50">
+          {Math.min(page + 1, pageCount)} / {pageCount}
+        </p>
+      )}
 
       {/* Hidden music: starts on first tap anywhere; no pause controls */}
       <audio
@@ -897,6 +1051,36 @@ export default function Book() {
           {lyrics[lyricIndex].text}
         </p>
       </div>
+
+      {noteOpen && (
+        <SecretNote
+          key={noteIdx}
+          text={SECRET_NOTES[noteIdx]}
+          onClose={() => {
+            setNoteOpen(false);
+            setNoteIdx((i) => (i + 1) % SECRET_NOTES.length);
+          }}
+        />
+      )}
+      </div>
+
+      {/* Tap sparkles */}
+      {sparks.map((sp) => (
+        <span
+          key={sp.id}
+          className="tap-pop pointer-events-none absolute z-[20000] text-xl"
+          style={
+            {
+              left: sp.x,
+              top: sp.y,
+              "--dx": `${sp.dx}px`,
+              "--dy": `${sp.dy}px`,
+            } as React.CSSProperties
+          }
+        >
+          {sp.e}
+        </span>
+      ))}
       </div>
     </div>
   );
