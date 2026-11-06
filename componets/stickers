@@ -1,0 +1,69 @@
+// Tightly-cropped sticker pack (public/stickers/<id>.png).
+// id -> [width, height] of the image, so layouts can keep the right shape.
+export const STICKER_SIZES: Record<string, [number, number]> = {
+  billa: [378, 380],
+  billa2: [376, 380],
+  billa3: [322, 380],
+  billa4: [285, 349],
+  billa5: [292, 380],
+  billa6: [313, 357],
+  kit: [179, 209],
+  mouse: [320, 321],
+  rabbit: [290, 380],
+  ted: [265, 267],
+  peng: [376, 380],
+  butter: [380, 329],
+  boqey: [306, 380],
+  rosel: [245, 380],
+  fwine: [185, 380],
+  twoStar: [376, 380],
+  starem: [364, 347],
+  stamp: [236, 227],
+  lovetape: [361, 114],
+  start: [380, 131],
+  mine: [270, 102],
+  miss: [297, 96],
+  lyrics: [359, 127],
+  badge: [380, 380],
+  cutbox: [380, 368],
+  cutold: [380, 338],
+  recorder: [380, 292],
+  moon: [380, 380],
+  note1: [228, 235],
+  disk: [380, 380],
+  tape: [380, 101],
+  tape2: [345, 380],
+  lovey: [112, 380],
+  fits: [225, 205],
+  starB: [380, 343],
+  tower: [203, 380],
+  side1: [287, 380],
+  side2: [328, 380],
+  side3: [214, 380],
+  side4: [257, 380],
+  side5: [256, 380],
+  paper: [294, 380],
+};
+
+export const stickerSrc = (id: string) => `/stickers/${id}.png`;
+
+export type StickerKind = "big" | "small" | "wide" | "tall" | "tiny";
+
+// Cute stickers grouped by the kind of space they fit. Pages without their own
+// `decor` list get stickers picked from here automatically.
+export const POOLS: Record<StickerKind, string[]> = {
+  big: ["billa", "ted", "billa6", "peng", "billa5", "mouse", "rabbit", "billa4", "boqey", "kit", "billa2", "recorder", "cutbox"],
+  small: ["butter", "fits", "stamp", "note1", "starB", "kit", "billa6", "rabbit"],
+  wide: ["lovetape", "start", "mine", "miss", "lyrics"],
+  tall: ["lovey", "fwine", "rosel", "tower"],
+  tiny: ["starem", "twoStar", "stamp", "fits"],
+};
+
+// Torn-paper scraps for page corners. `corner` = the corner the artwork
+// naturally belongs to (they get flipped automatically to sit on the outer edge).
+export const SCRAPS: Record<string, { corner: "TL" | "BR"; w: number }> = {
+  side1: { corner: "TL", w: 98 },
+  side3: { corner: "TL", w: 74 },
+  paper: { corner: "TL", w: 96 },
+  side2: { corner: "BR", w: 122 },
+};
