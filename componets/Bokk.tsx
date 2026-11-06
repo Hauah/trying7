@@ -372,11 +372,11 @@ export default function Book() {
       <div
         className="relative overflow-hidden book-page bg-blue-700 text-white"
         data-density="hard"
-        style={{ width: 400, height: 500 }}
+        style={{ width: 400, height: 500, background: "#0b0b0b" }}
       >
         <Image
           // src="/frontr.png"
-          src="/pages/front.png"
+          src="/pages/front-fit.png"
           alt="Front Cover"
           fill
           priority
@@ -931,14 +931,14 @@ export default function Book() {
       <div
         className="relative overflow-hidden book-page bg-blue-700 text-white"
         data-density="hard"
-        style={{ width: 400, height: 500 }}
+        style={{ width: 400, height: 500, background: "#0b0b0b" }}
       >
         {/* <div className="flex h-full items-center justify-center text-5xl font-bold">
           Back Cover
         </div> */}
           <Image
           // src="/frontr.png"
-          src="/pages/back.png"
+          src="/pages/back-fit.png"
           alt="Front Cover"
           fill
           priority
